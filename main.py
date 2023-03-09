@@ -1,11 +1,20 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
 from uuid import uuid4, UUID
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 
 from models import User, Gender, Role
 
 app = FastAPI()
+
+
+class UserUpdateDto(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    middle_name: Optional[str] = None
+    roles: Optional[List[Role]] = None
+
 
 db: List[User] = [
     User(
@@ -53,23 +62,41 @@ async def create_user(user: User) -> dict[str, str | User]:
 
 
 @app.delete("/api/v1/users/{user_id}")
-async def delete_user(user_id: UUID) -> dict[str, str]:
+async def delete_user(user_id: UUID):
     for index, user in enumerate(db):
         if user.id == user_id:
             db.pop(index)
 
             return {"message": "Student deleted successfully!"}
 
-    return {"message": "Student not found!"}
+    return HTTPException(status_code=404, detail="Student not found!", headers={"X-Error": "There goes my error"})
 
 
 @app.put("/api/v1/users/{user_id}")
-async def update_user(user_id: UUID, user: User) -> dict[str, str | User]:
+async def update_user(user_id: UUID, user: UserUpdateDto):
     for index, _user in enumerate(db):
         if _user.id == user_id:
-            db[index] = user
-            db[index].id = user_id
+            if user.first_name is not None:
+                db[index].first_name = user.first_name
+
+            if user.last_name is not None:
+                db[index].last_name = user.last_name
+
+            if user.middle_name is not None:
+                db[index].middle_name = user.middle_name
+
+            if user.roles is not None:
+                db[index].roles = user.roles
 
             return {"message": "Student updated successfully!", "data": user}
 
-    return {"message": "Student not found!"}
+    return HTTPException(status_code=404, detail="Student not found!", headers={"X-Error": "There goes my error"})
+
+
+@app.get("/api/v1/users/{user_id}")
+async def fetch_user(user_id: UUID):
+    for user in db:
+        if user.id == user_id:
+            return {"message": "Student fetched successfully!", "data": user}
+
+    return HTTPException(status_code=404, detail="Student not found!", headers={"X-Error": "There goes my error"})
