@@ -50,3 +50,26 @@ async def create_user(user: User) -> dict[str, str | User]:
     db.append(user)
 
     return {"message": "Student created successfully!", "data": user}
+
+
+@app.delete("/api/v1/users/{user_id}")
+async def delete_user(user_id: UUID) -> dict[str, str]:
+    for index, user in enumerate(db):
+        if user.id == user_id:
+            db.pop(index)
+
+            return {"message": "Student deleted successfully!"}
+
+    return {"message": "Student not found!"}
+
+
+@app.put("/api/v1/users/{user_id}")
+async def update_user(user_id: UUID, user: User) -> dict[str, str | User]:
+    for index, _user in enumerate(db):
+        if _user.id == user_id:
+            db[index] = user
+            db[index].id = user_id
+
+            return {"message": "Student updated successfully!", "data": user}
+
+    return {"message": "Student not found!"}
