@@ -43,3 +43,10 @@ async def root() -> Dict[str, str]:
 @app.get("/api/v1/users")
 async def fetch_users() -> dict[str, str | list[User]]:
     return {"message": "Students fetched successfully!", "data": db}
+
+
+@app.post("/api/v1/users")
+async def create_user(user: User) -> dict[str, str | User]:
+    db.append(user)
+
+    return {"message": "Student created successfully!", "data": user}
